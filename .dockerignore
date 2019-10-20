@@ -1,0 +1,11 @@
+**/bin
+**/obj
+**/out
+**/.vscode
+**/.vs
+**/.idea
+**/.git
+**/.postgre
+*.yml
+*.md
+.dotnet
