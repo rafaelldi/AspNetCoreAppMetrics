@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Prometheus;
 
 namespace AspNetCoreAppMetrics.Controllers
 {
@@ -24,16 +22,30 @@ namespace AspNetCoreAppMetrics.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        public WeatherForecast Get()
         {
             var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            var forecast = new WeatherForecast
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
+                Date = DateTime.Now.AddDays(1),
+                TemperatureC = rng.Next(-20, 30),
                 Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
+            };
+
+            var histogram = Metrics.CreateHistogram(
+                "temperature_with_summary",
+                "Temperature buckets divided by summary",
+                new HistogramConfiguration
+                {
+                    LabelNames = new []{"Summary"},
+                    Buckets = Histogram.LinearBuckets(-20, 10, 6)
+                }
+            );
+            histogram
+                .WithLabels(forecast.Summary)
+                .Observe(forecast.TemperatureC);
+            
+            return forecast;
         }
     }
 }
